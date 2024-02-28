@@ -14,8 +14,9 @@ const server = http.createServer((req, res) => {
             response.on('data', (chunk) => {
                 data += chunk;
             });
+            let dummy=' somehtin asdfdiasd <li class="latest-stories__item"> <a  href="ab\\"c.com"> <h3 class="latest-stories__item-headline">test case 1</h3></a> <li class="latest-stories__item"><a href="ab\\c.com"><h3 class="latest-stories__item-headline">test case 2</h3></a>'
             response.on('end', () => {
-                const stories = extractStories(data);
+                const stories = extractStories(dummy);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(stories));
             });
@@ -36,16 +37,28 @@ const port = 3000;
 server.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
-
 function extractStories(html) {
     const stories = [];
-    const regex = /<li class="latest-stories__item">\s*<a\s+href="([^"]+)"[^>]*>\s*<h3[^>]*>([^<]+)<\/h3>\s*<\/a>/g;
+    // const regex = /<li class="latest-stories__item">\s*<a\s+href="([^"]+)"[^>]*>\s*<h3[^>]*>([^<]+)<\/h3>\s*<\/a>/g;
+    const regex = /<li class="latest-stories__item">\s*<a\s+href="((?:\\.|[^"\\])*)"[^>]*>\s*<h3[^>]*>([^<]+)<\/h3>\s*<\/a>/g;
     let match;
-
     while ((match = regex.exec(html)) !== null && stories.length < 6) {
+        let possLink=match[1];
+        let newLink="";
+        let currIndex=0;
+        while(currIndex<possLink.length){
+            if(possLink[currIndex]==='\\'){
+                currIndex++;
+                newLink+=possLink[currIndex]
+                currIndex++;
+            }else{
+                newLink+=possLink[currIndex]
+                currIndex++;
+            }
+        }
         stories.push({
             title: match[2].trim(),
-            link: match[1]
+            link: newLink
         });
     }
     return stories;
